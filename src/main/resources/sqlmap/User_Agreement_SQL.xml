@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.UserAgreementMapper">
+
+	<insert id="createUserAgreement" parameterType="UserAgreementBean">
+		INSERT INTO user_agreement(
+			agreement_id,
+			agreement_name,
+			user_id,
+			created_at
+	   	)
+		VALUES(#{agreementId}, #{agreementName}, #{userId}, now())
+	</insert>
+
+	<select id="findByUserId" parameterType="String" resultType="UserAgreementBean">
+		SELECT
+			agreement_id as agreementId,
+			agreement_name as agreementName,
+			user_id as userId,
+			created_at as createdAt
+		FROM user_agreement
+		WHERE user_id  = #{userId}
+	</select>
+
+</mapper>

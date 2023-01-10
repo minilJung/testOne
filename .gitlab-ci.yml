@@ -1,0 +1,4 @@
+include:
+  - project: devops/cicd/gitlab-ci
+    ref: master
+    file: .gitlab-ci-java-ecs.yml

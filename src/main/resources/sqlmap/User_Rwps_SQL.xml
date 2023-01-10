@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.UserRwpsMapper">
+
+	<insert id="createUserRwps" parameterType="UserRwpsBean">
+		INSERT INTO user_rwps(
+			  rwps_id,
+			  user_id,
+			  rwps_broc_name,
+			  rwps_cntn_name,
+			  public_yn,
+			  <!-- status, -->
+			  rwps_star_date,
+			  created_at,
+			  approved_at
+	  	) VALUES (
+			#{rwpsId},
+			#{userId},
+			#{rwpsBrocName},
+			#{rwpsCntnName},
+			#{publicYn},
+			<!-- #{status}, -->
+			#{rwpsStarDate},
+			now(),
+		    null
+		)
+	</insert>
+
+	<select id="getInsightByUserId" parameterType="String" resultType="ActivityInsight">
+		SELECT
+			insight.totalCount > 0 as existData,
+			insight.publicCount > 0 as existPublic,
+			insight.totalCount = insight.publicCount as allPublic
+		FROM (
+             SELECT
+                 COUNT(*) as totalCount,
+                 (SELECT COUNT(*) FROM user_rwps WHERE user_id = (#{userId}) AND public_yn = 'Y') as publicCount
+             FROM user_rwps
+             WHERE user_id = #{userId}
+         ) insight
+	</select>
+
+	<select id="findUserRwpsByRwpsId" parameterType="String" resultType="UserRwpsBean">
+		SELECT
+			rwps_id as rwpsId,
+			user_id as userId,
+			rwps_broc_name as rwpsBrocName,
+			rwps_cntn_name as rwpsCntnName,
+			public_yn as publicYn,
+			<!-- status as status, -->
+			rwps_star_date as rwpsStarDate,
+			created_at as createdAt
+		FROM user_rwps
+		WHERE rwps_id  = #{rwpsId}
+		ORDER BY rwps_star_date
+	</select>
+
+	<select id="findPendingRwpsByFpId" parameterType="String" resultType="UserRwpsBean">
+		SELECT rwps.rwps_id as rwpsId,
+			   rwps.user_id as userId,
+			   rwps.rwps_broc_name as rwpsBrocName,
+			   rwps.rwps_cntn_name as rwpsCntnName,
+			   rwps.rwps_star_date as rwpsStarDate,
+			   rwps.public_yn as publicYn,
+			   <!-- rwps.status as status, -->
+			   rwps.created_at as createdAt
+		FROM user_rwps rwps
+				 JOIN ecard
+					  ON ecard.fp_id = #{fpId}
+					  AND ecard.user_id = rwps.user_id
+		<!-- WHERE rwps.status = 'P' -->
+		ORDER BY rwps_star_date
+	</select>
+
+	<update id="updateUserRwps" parameterType="UserRwpsBean">
+		UPDATE user_rwps
+		SET
+		    <!-- status = #{status}, -->
+		    public_yn = #{publicYn},
+		    approved_at = #{approvedAt}
+		WHERE
+		    rwps_id = #{rwpsId}
+
+	</update>
+
+	<delete id="deleteRwps" parameterType="ActivityDeleteRequestDto">
+		DELETE FROM user_rwps
+		WHERE rwps_id = #{id}
+
+	</delete>
+
+	<delete id="deleteRwpsMedia" parameterType="ActivityDeleteRequestDto">
+		DELETE FROM user_rwps_media
+		WHERE rwps_id = #{id}
+	</delete>
+</mapper>

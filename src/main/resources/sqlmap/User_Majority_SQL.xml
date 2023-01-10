@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.UserMajorityMapper">
+
+	<!-- MajorityBean 기본 조회 -->
+	<sql id="majoritySelectDefault">
+		SELECT
+			majority_id as majorityId,
+			majority_name as majorityName,
+			user_id as userId,
+			public_yn as publicYn
+		FROM user_majority
+	</sql>
+	<insert id="addMajority" parameterType="UserMajorityBean">
+		INSERT INTO user_majority(
+			majority_id,
+			majority_name,
+			user_id,
+			public_yn
+	   	)
+		VALUES(#{majorityId}, #{majorityName}, #{userId}, #{publicYn})
+	</insert>
+
+	<select id="findByUserId" parameterType="MajorityFilterDto" resultType="UserMajorityBean">
+		<include refid="majoritySelectDefault" />
+		WHERE user_id  = #{userId}
+	</select>
+
+	<select id="findMajorityBySpecification" parameterType="MajorityFilterDto" resultType="UserMajorityBean">
+		<include refid="majoritySelectDefault" />
+		WHERE 0 = 0
+		<if test="userId != null and userId != ''">
+			AND user_id  = #{userId}
+		</if>
+		<if test="publicYn != null and publicYn != ''">
+			AND public_yn  = #{publicYn}
+		</if>
+	</select>
+
+	<select id="getMajorityByMajorityId" parameterType="String" resultType="UserMajorityBean">
+		SELECT
+			majority_id as majorityId,
+			majority_name as majorityName,
+			user_id as userId,
+			public_yn as publicYn
+		FROM user_majority
+		WHERE majority_id  = #{majorityId}
+	</select>
+
+	<update id="updateMajority" parameterType="UserMajorityBean">
+		UPDATE user_majority
+		SET
+			public_yn = #{publicYn}
+		WHERE majority_id = #{majorityId}
+	</update>
+
+</mapper>

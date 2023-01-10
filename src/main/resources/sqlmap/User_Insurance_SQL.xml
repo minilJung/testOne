@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.UserInsuranceMapper">
+
+    <insert id="createUserInsurance" parameterType="UserInsuranceBean">
+        INSERT INTO user_insurance(
+           insurance_id,
+           user_id,
+           insurance_company_code,
+           insurance_company_name,
+           insurance_company_logo,
+           insurance_type,
+           public_yn,
+           created_at)
+        VALUES (#{insuranceId},
+                #{userId},
+                #{insuranceCompanyCode},
+                #{insuranceCompanyName},
+                #{insuranceCompanyLogo},
+                #{insuranceType},
+                #{publicYn},
+                now());
+    </insert>
+
+    <select id="findByUserId" parameterType="String" resultType="UserInsuranceBean">
+        SELECT
+            ui.insurance_id as insuranceId,
+            ui.user_id as userId,
+            ui.insurance_company_code as insuranceCompanyCode,
+            ui.insurance_company_name as insuranceCompanyName,
+            ic.insurance_company_logo as insuranceCompanyLogo,
+            ui.insurance_type as insuranceType,
+            ui.public_yn as insuranceType,
+            ui.created_at as publicYn
+        FROM user_insurance ui
+        LEFT JOIN insurance_company ic
+            ON ic.insurance_company_code = ui.insurance_company_code
+        WHERE user_id = #{userId}
+    </select>
+
+    <update id="updateUserInsurancePublicYn" parameterType="UserInsuranceBean">
+        UPDATE user_insurance
+        SET public_yn = #{publicYn}
+        WHERE insurance_id = #{insuranceId}
+    </update>
+
+    <delete id="deleteInsurance" parameterType="String">
+        DELETE FROM user_insurance
+        WHERE user_id = #{userId}
+    </delete>
+</mapper>

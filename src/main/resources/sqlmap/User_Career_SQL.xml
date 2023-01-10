@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.UserCareerMapper">
+
+	<!-- CareerBean 기본 조회 -->
+	<sql id="careerSelectDefault">
+		SELECT
+			career_id as careerId,
+			user_id as userId,
+			career_name as careerName,
+			start_date as startDate,
+			end_date as endDate,
+			on_duty_yn as onDutyYn,
+			public_yn as publicYn
+		FROM user_career
+	</sql>
+	<insert id="addCareer" parameterType="UserCareerBean">
+		INSERT INTO user_career(
+			career_id,
+			user_id,
+			policyholder_code,
+			career_name,
+			start_date,
+			end_date,
+			on_duty_yn,
+			scraping_status,
+			public_yn
+	   	)
+		VALUES(
+			#{careerId},
+			#{userId},
+		    #{policyholderCode},
+			#{careerName},
+			#{startDate},
+			#{endDate},
+			#{onDutyYn},
+			#{scrapingStatus},
+			#{publicYn}
+		  )
+	</insert>
+
+	<select id="findByUserId" parameterType="String" resultType="UserCareerBean">
+		<include refid="careerSelectDefault" />
+		WHERE user_id  = #{userId}
+		ORDER BY start_date desc;
+	</select>
+
+	<select id="findCareerBySpecification" parameterType="CareerFilterDto" resultType="UserCareerBean">
+		<include refid="careerSelectDefault" />
+		WHERE 0 = 0
+		<if test="userId != null and userId != ''">
+			AND user_id  = #{userId}
+		</if>
+
+		<if test="publicYn != null and publicYn != ''">
+			AND public_yn  = #{publicYn}
+		</if>
+		ORDER BY start_date desc;
+	</select>
+
+	<select id="getInsightByUserId" parameterType="String" resultType="CareerInsight">
+		SELECT
+			insight.totalCount > 0 as existData,
+			insight.publicCount > 0 as existPublic,
+			insight.totalCount = insight.publicCount as allPublic,
+			(
+				SELECT
+					SUM(
+							DATEDIFF(
+									IFNULL(end_date, DATE_FORMAT(now(), '%Y-%m-%d')),
+									start_date
+								)
+						)
+				FROM user_career
+				WHERE user_id = #{userId} AND public_yn = 'Y'
+			) as workDays
+		FROM (
+				 SELECT
+					 COUNT(*) as totalCount,
+					 (SELECT COUNT(*) FROM user_career WHERE user_id = (#{userId}) AND public_yn = 'Y') as publicCount
+				 FROM user_career
+				 WHERE user_id = #{userId}
+			 ) insight
+	</select>
+
+	<select id="getCareerByCareerId" parameterType="String" resultType="UserCareerBean">
+		SELECT
+			career_id as careerId,
+			user_id as userId,
+			career_name as careerName,
+			start_date as startDate,
+			end_date as endDate,
+			public_yn as publicYn
+		FROM user_career
+		WHERE career_id  = #{careerId}
+	</select>
+
+	<update id="updateCareer" parameterType="UserCareerBean">
+		UPDATE user_career
+		SET
+			end_date = #{endDate},
+			public_yn = #{publicYn}
+		WHERE career_id = #{careerId}
+	</update>
+
+	<delete id="deleteCareer" parameterType="String">
+		DELETE FROM user_career
+		WHERE user_id = #{userId}
+	</delete>
+
+	<select id="getNhisScrapingStatus" parameterType="String" resultType="Map">
+		SELECT
+			IF(COUNT(*) > 0, '1', '2') as scrapingStatus
+		FROM
+		    user_career
+		WHERE user_id = #{userId} AND scraping_status = '1'
+	</select>
+</mapper>

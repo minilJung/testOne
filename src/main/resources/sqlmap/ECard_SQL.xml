@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.ECardMapper">
+	<sql id="selectEcardDefault">
+		SELECT
+			ecard.ecard_id as ecardId,
+			ecard.company_id as companyId,
+			ecard.user_id as userId,
+			ecard.employee_no as employeeNo,
+			ecard.position as position,
+			ecard.department as department,
+			ecard.fp_id as fpId,
+			ecard.email as email,
+			ecard.branch_number as branchNumber,
+			ecard.fax_number as faxNumber,
+			ecard.profile_img_url as profileImageUrl,
+			ecard.profile_file_id as profileFileId,
+			ecard.profile_template_no as profileTemplateNo,
+			ecard.preview_file_id as profileFileId,
+			ecard.ecard_changed_yn as ecardChangedYn,
+			ecard.self_description as selfDescription,
+			ecard.property_insurance_yn as propertyInsuranceYn,
+			ecard.shared_count as sharedCount,
+			ecard.last_shared_at as lastSharedAt,
+			ecard.view_count as viewCount,
+			ecard.last_viewed_at as lastViewedAt,
+			ecard.last_updated_at as lastUpdatedAt,
+			ecard.on_duty as onDuty,
+			ecard.delete_yn as deleteYn,
+			ecard.customers_public_yn as customersPublicYn,
+			ecard.customer_counts as customerCounts,
+			ecard.contracts_public_yn as contractsPublicYn,
+			ecard.contract_counts as contractCounts,
+			ecard.contract_rate_public_yn as contract_ratePublicYn,
+			ecard.contract_rate as contractRate,
+			ecard.imperfect_rate_public_yn as imperfectRatePublicYn,
+			ecard.imperfect_counts as imperfectCounts,
+			ecard.branch_number_public_yn as branchNumberPublicYn,
+			ecard.fax_number_public_yn as faxNumberPublicYn,
+			ecard.badge_public_yn as badgePublicYn,
+			ecard.view_count as viewCount,
+			ecard.last_viewed_at as lastViewedAt,
+			user.name as name,
+			profileFile.file_name as profileFileName,
+			previewFile.file_name as previewFileName
+		FROM ecard ecard
+		    LEFT JOIN user
+				ON ecard.user_id = user.user_id
+			LEFT JOIN files profileFile
+				ON ecard.profile_file_id = profileFile.file_id
+			LEFT JOIN files previewFile
+				ON ecard.preview_file_id = previewFile.file_id
+	</sql>
+	<insert id="addECard" parameterType="ECardBean" keyColumn="ecardId" useGeneratedKeys="true">
+		INSERT INTO ecard
+		(
+			ecard_id,
+			company_id,
+			user_id,
+			employee_no,
+			fp_id,
+			department,
+			email,
+			branch_number,
+			fax_number,
+			profile_img_url,
+			profile_template_no,
+			customers_public_yn,
+			contracts_public_yn,
+			contract_rate_public_yn,
+			imperfect_rate_public_yn,
+			branch_number_public_yn,
+			fax_number_public_yn,
+			badge_public_yn,
+		 	on_duty,
+		 	shared_count,
+		 	view_count,
+			ecard_changed_yn
+		)
+		VALUES
+		(
+			#{ecardId},
+			#{companyId},
+			#{userId},
+			#{employeeNo},
+			#{fpId},
+			#{department},
+			#{email},
+			#{branchNumber},
+			#{faxNumber},
+			#{profileImageUrl},
+			1,
+			#{customersPublicYn},
+			#{contractsPublicYn},
+			#{contractRatePublicYn},
+			#{imperfectRatePublicYn},
+			#{branchNumberPublicYn},
+			#{faxNumberPublicYn},
+			#{badgePublicYn},
+			#{onDuty},
+			0,
+			0,
+		 	'Y'
+		)
+	</insert>
+
+	<select id="findECardByUserId" parameterType="String" resultType="ECardBean">
+		<include refid="selectEcardDefault" />
+		WHERE
+		    ecard.user_id = #{userId}
+	</select>
+
+	<select id="findECardByECardId" parameterType="String" resultType="ECardBean">
+		# ECard 수정 시를 위해 모든 정보 조회
+		<include refid="selectEcardDefault" />
+		WHERE
+		    ecard.ecard_id = #{ecardId}
+	</select>
+
+	<select id="findECardByFpId" parameterType="String" resultType="ECardBean">
+		<include refid="selectEcardDefault" />
+		WHERE fp_id = #{fpId}
+	</select>
+
+	<update id="updateECardByECardId" parameterType="ECardBean">
+		UPDATE ecard
+		SET last_updated_at = NOW()
+			<if test="profileTemplateNo != ''">
+				, profile_template_no = #{profileTemplateNo}
+			</if>
+
+		  	, ecard_changed_yn = #{ecardChangedYn}
+			, branch_number = #{branchNumber}
+			, fax_number = #{faxNumber}
+			, email = #{email}
+
+			, customer_counts = #{customerCounts}
+			, contract_counts = #{contractCounts}
+			, contract_rate = #{contractRate}
+			, imperfect_counts = #{imperfectCounts}
+
+			<if test="department != ''">
+				, department = #{department}
+			</if>
+			<if test="onDuty != ''">
+				, on_duty = #{onDuty}
+			</if>
+			<if test="position != ''">
+				, position = #{position}
+			</if>
+			<if test="profileFileId != ''">
+				, profile_file_id = #{profileFileId}
+			</if>
+			<if test="profileImageUrl != null and profileImageUrl != ''">
+				, profile_img_url = #{profileImageUrl}
+			</if>
+			<if test="customersPublicYn != null and customersPublicYn != ''">
+				, customers_public_yn = #{customersPublicYn}
+			</if>
+			<if test="contractsPublicYn != null and contractsPublicYn != ''">
+				, contracts_public_yn = #{contractsPublicYn}
+			</if>
+			<if test="contractRatePublicYn != null and contractRatePublicYn != ''">
+				, contract_rate_public_yn = #{contractRatePublicYn}
+			</if>
+			<if test="imperfectRatePublicYn != null and imperfectRatePublicYn != ''">
+				, imperfect_rate_public_yn = #{imperfectRatePublicYn}
+			</if>
+			<if test="branchNumberPublicYn != null and branchNumberPublicYn != ''">
+				, branch_number_public_yn = #{branchNumberPublicYn}
+			</if>
+			<if test="faxNumberPublicYn != null and faxNumberPublicYn != ''">
+				, fax_number_public_yn = #{faxNumberPublicYn}
+			</if>
+			<if test="badgePublicYn != null and badgePublicYn != ''">
+				, badge_public_yn = #{badgePublicYn}
+			</if>
+		WHERE ecard_id = #{ecardId}
+	</update>
+
+	<select id="findECardBaseInfoByECardId" parameterType="String" resultType="hashmap">
+		SELECT
+			ec.ecard_id AS ecardId,
+			ec.company_id AS companyId,
+			ec.employee_no AS employeeNo,
+			ec.position AS position,
+			ec.user_id AS userId,
+			ec.fp_id AS fpId,
+			ec.on_duty AS onDuty,
+			user.name AS name,
+			ec.email as email,
+			user.birthdate as birthdate,
+			ec.branch_number as branchNumber,
+			user.mobile_no as mobileNumber,
+			ec.fax_number AS faxNumber,
+			ec.on_duty AS onDuty,
+			ec.department AS department,
+			user.kakaotalk_id AS kakaotalkId,
+			profileImage.file_name AS profileFileName,
+			profileImage.file_ext AS profileFileExt,
+			previewImage.file_name AS previFileName,
+			previewImage.file_ext AS previewFileExt,
+			ec.ecard_changed_yn AS ecardChangedYn,
+			template.template_no AS profileTemplateNo,
+			ec.shared_count AS sharedCount,
+			ec.last_shared_at AS lastSharedAt,
+			ec.view_count AS viewCount,
+			ec.last_viewed_at AS lastViewedAt,
+			ec.customers_public_yn AS customersPublicYn,
+			ec.contracts_public_yn AS contractsPublicYn,
+			ec.contract_rate_public_yn AS contractRatePublicYn,
+			ec.imperfect_rate_public_yn AS imperfectRatePublicYn,
+			ec.branch_number_public_yn AS branchNumberPublicYn,
+			ec.fax_number_public_yn AS faxNumberPublicYn,
+			ec.badge_public_yn AS badgePublicYn
+		FROM ecard ec
+		LEFT JOIN `user` user
+			ON ec.user_id = user.user_id
+		LEFT JOIN files profileImage
+			ON ec.profile_file_id = profileImage.file_id
+		LEFT JOIN files previewImage
+			ON ec.preview_file_id = previewImage.file_id
+		LEFT JOIN profile_template template
+			ON template.template_no = ec.profile_template_no
+		WHERE ec.ecard_id = #{ecardId}
+	</select>
+
+	<select id="findECardBaseInfoByCompanyIdAndUserId" parameterType="String" resultType="hashmap">
+		SELECT ecard_id AS ecardId
+		FROM ecard
+		WHERE company_id = #{companyId}
+		AND user_id = #{userId}	
+	</select>
+
+	<select id="findProfileBadgeByECardId" parameterType="ECardProfileRequestDto" resultType="ECardBadgeDto">
+		SELECT
+			ub.badge_id,
+			ub.user_id,
+			ub.badge_name,
+
+			<if test='imageSize == "D"'>
+				badge.badge_image_url AS badgeImageUrl,
+				badge.badge_dark_image_url As badgeDarkImageUrl,
+			</if>
+			<if test='imageSize == "M"'>
+				badge.badge_m_image_url AS badgeImageUrl,
+				badge.badge_m_dark_image_url AS badgeDarkImageUrl,
+			</if>
+			<if test='imageSize == "S"'>
+				badge.badge_s_image_url AS badgeImageUrl,
+				badge.badge_s_dark_image_url AS badgeDarkImageUrl,
+			</if>
+
+			ub.created_at,
+			ub.public_yn
+		FROM user_badge ub
+		LEFT JOIN badge badge
+		    ON ub.badge_name = badge.badge_name
+		WHERE
+		    user_id = (SELECT user_id FROM ecard WHERE ecard_id = #{ecardId})
+	</select>
+
+	<update id="saveECardIndicators" parameterType="ECardBean">
+		UPDATE ecard
+		SET
+			view_count = #{viewCount},
+			last_viewed_at = #{lastViewedAt},
+			shared_count=  #{sharedCount},
+			last_shared_At = #{lastSharedAt}
+		WHERE ecard_id = #{ecardId}
+	</update>
+
+	<insert id="addCustomerAccessLog" parameterType="CustomerAccessLogBean">
+		insert into customer_access_log(
+			ecard_id,
+			fp_id,
+			cust_id,
+			uri,
+			accessed_at
+		)
+		VALUES(
+		   #{ecardId},
+		   #{fpId},
+		   #{custId},
+		   #{uri},
+		   #{accessedAt}
+	   );
+	</insert>
+
+	<update id="updatePreviewImage" parameterType="ECardPreviewImageDto">
+		UPDATE ecard
+		SET
+		    preview_file_id = #{profileFileId},
+		    ecard_changed_yn = 'N',
+			last_updated_at = now()
+
+		WHERE ecard_id = #{ecardId};
+	</update>
+
+	<select id="getECardProfileMetadata" parameterType="String" resultType="ECardProfileMetadataDto">
+		SELECT
+		    ecard.ecard_id as ecardId,
+		    IFNULL(ecard.position, 'FP') as position,
+		    ecard.preview_file_id as profileFileId,
+			previewFile.file_name as previewFileName,
+			previewFile.file_ext as previewFileExt,
+		    ecard.ecard_changed_yn as ecardChangedYn,
+		    user.name as name
+		FROM ecard ecard
+		LEFT JOIN user user
+			ON ecard.user_id = user.user_id
+		LEFT OUTER JOIN files previewFile
+			ON previewFile.file_id = ecard.preview_file_id
+		WHERE ecard.ecard_id = #{ecardId}
+	</select>
+
+	<select id="getCustomerAccessCount" parameterType="CustomerAccessLogBean">
+		SELECT
+		ecard_id as ecardId,
+		fp_id as fpId,
+		cust_id as custId,
+		uri,
+		COUNT(*) as accessCounts
+		FROM customer_access_log
+		<where>
+			fp_id = #{fpId}
+			AND cust_id = #{custId}
+		</where>
+	</select>
+
+</mapper>

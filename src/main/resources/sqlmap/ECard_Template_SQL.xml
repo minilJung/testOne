@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.ECardTemplateMapper">
+
+	<select id="getBackgrounds" resultType="ECardTemplateBean">
+		SELECT
+			template_no as templateNo,
+			background_img_url as backgroundImgUrl,
+			name_color as nameColor,
+			mobile_number_color as mobileNumberColor,
+			regular_text_color as regularTextColor,
+			logo_image_type as logoImageType,
+			badge_image_type as badgeImageType,
+			company_m_logo as companyLogo
+		FROM profile_template
+	</select>
+
+	<select id="getBackground" parameterType="Integer" resultType="ECardTemplateBean">
+		SELECT
+			template_no as templateNo,
+			background_img_url as backgroundImgUrl,
+			name_color as nameColor,
+			mobile_number_color as mobileNumberColor,
+			regular_text_color as regularTextColor,
+			logo_image_type as logoImageType,
+			company_logo as companyLogo,
+			badge_image_type as badgeImageType
+		FROM profile_template
+		WHERE template_no = #{templateNo}
+		LIMIT 1
+	</select>
+</mapper>

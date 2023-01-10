@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.AuthMapper">
+	<select id="findUserByUserIdPassword" parameterType="AuthBean" resultType="AuthBean">
+		SELECT
+			user.user_id AS userId,
+			ecard.company_id AS companyId,
+			ecard.employee_no AS employeeNo,
+			ecard.ecard_id AS ecardId
+		FROM user
+		LEFT JOIN ecard
+			ON user.user_id = ecard.user_id
+		WHERE user.delete_yn = 'N'
+		AND user.user_id = #{userId}
+		AND password = UPPER(SHA1(UNHEX(SHA1(#{password}))))
+	</select>
+
+	<select id="userExistenceByUserIdPassword" parameterType="AuthBean" resultType="AuthBean">
+		SELECT
+			user.user_id AS userId,
+			ecard.company_id AS companyId,
+			ecard.employee_no AS employeeNo,
+			ecard.ecard_id AS ecardId
+		FROM user
+				 LEFT JOIN ecard
+						   ON user.user_id = ecard.user_id
+		WHERE user.delete_yn = 'N'
+		  AND user.user_id = #{userId}
+		  AND password = #{password}
+	</select>
+
+	<select id="findAuthInfoBySessionId" parameterType="String" resultType="AuthBean">
+		SELECT 
+			A.user_id AS userId,
+			B.company_id AS companyId,
+			B.employee_no AS employeeNo,
+			ecard_id AS ecardId
+		FROM `user` A LEFT JOIN company_user B
+			ON A.user_id = B.user_id
+		LEFT JOIN ecard C
+			ON B.company_id = C.company_id
+			AND B.user_id = C.user_id
+		WHERE A.session_id = #{sessionId}
+	</select>
+
+	<insert id="createAuthenticationInfo" parameterType="AuthenticationBean">
+		INSERT INTO user_authentication(
+			authentication_id, user_id, access_token, refresh_token, access_token_expires_at, refresh_token_expires_at, expired_yn, created_at
+		)
+		VALUES(#{authenticationId}, #{userId}, #{accessToken}, #{refreshToken}, #{accessTokenExpiresAt}, #{refreshTokenExpiresAt}, 'N', now())
+	</insert>
+
+	<select id="findAuthenticationInfoByAccessToken" parameterType="String" resultType="AuthenticationBean">
+		SELECT
+			authentication_id as authenticationId,
+			user_id as userId,
+			access_token as accessToken,
+			refresh_token as refreshToken,
+			access_token_expires_at as accessTokenExpiresAt,
+			refresh_token_expires_at as refreshTokenExpiresAt,
+			expired_yn as expiredYn,
+			created_at as createdAt
+		FROM user_authentication
+			WHERE access_token = #{accessToken}
+		Limit 1
+	</select>
+
+	<select id="findAuthenticationInfoByRefreshToken" parameterType="String" resultType="AuthenticationBean">
+		SELECT
+			authentication_id as authenticationId,
+			user_id as userId,
+			access_token as accessToken,
+			refresh_token as refreshToken,
+			access_token_expires_at as accessTokenExpiresAt,
+			refresh_token_expires_at as refreshTokenExpiresAt,
+			expired_yn as expiredYn,
+			created_at as createdAt
+		FROM user_authentication
+			WHERE refresh_token = #{refreshToken}
+		Limit 1
+	</select>
+
+	<select id="updateAuthenticationInfo" parameterType="AuthenticationBean">
+		UPDATE user_authentication
+		SET
+			authentication_id = #{authenticationId},
+			user_id = #{userId},
+			access_token = #{accessToken},
+			refresh_token = #{refreshToken},
+			access_token_expires_at = #{accessTokenExpiresAt},
+			refresh_token_expires_at = #{refreshTokenExpiresAt},
+			created_at = #{createdAt}
+		WHERE authentication_id = #{authenticationId}
+	</select>
+
+	<update id="updateAuthenticationInfoToExpire" parameterType="String">
+		UPDATE user_authentication
+		SET
+			expired_yn = 'Y'
+		WHERE authentication_id = #{authenticationId}
+	</update>
+
+	<select id="getOpenApiExistence" parameterType="String" resultType="Map">
+		SELECT IF(COUNT(*) > 0, 'Y', 'N') as existenceYn,
+		       api_name as apiName
+		FROM open_api
+		WHERE custom_id = #{customId}
+	</select>
+
+	<insert id="saveAccessLog" parameterType="OpenApiAccessLogBean">
+		INSERT INTO open_api_log (
+			api_name,
+			fp_uniq_no,
+			access_at
+		) VALUES(
+			#{apiName},
+			#{fpUniqNo},
+			now())
+	</insert>
+</mapper>

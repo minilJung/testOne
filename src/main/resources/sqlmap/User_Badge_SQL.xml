@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.UserBadgeMapper">
+
+	<insert id="createUserBadge" parameterType="UserBadgeBean">
+		INSERT INTO user_badge(badge_id, user_id, badge_name, badge_image_url, created_at, public_yn)
+		VALUES(#{badgeId}, #{userId}, #{badgeName}, #{badgeImageUrl}, now(), #{publicYn})
+	</insert>
+
+	<select id="findByUserId" parameterType="String" resultType="UserBadgeBean">
+		SELECT
+			badge_id as badgeId,
+			user_id as userId,
+			badge_name as badgeName,
+			badge_image_url as badgeImageUrl,
+			public_yn as publicYn,
+			created_at as createdAt
+		FROM user_badge
+		WHERE user_id  = #{userId} AND public_yn = 'Y'
+	</select>
+
+	<update id="updateUserBadge" parameterType="UserBadgeBean">
+		UPDATE user_badge
+		SET
+		    public_yn = #{publicYn}
+		WHERE
+		    badge_id = #{badgeId}
+
+	</update>
+
+</mapper>

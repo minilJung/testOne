@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.UserMapper">
+	<!-- UserBean 기본 조회 -->
+	<sql id="selectUserDefault">
+		SELECT
+			user.user_id as userId,
+			user.password as password,
+			user.name as name,
+			user.account_id as accountId,
+			user.birthdate as birthdate,
+			user.di as di,
+			user.ci as ci,
+			user.mobile_no as mobileNo,
+			user.email as email,
+			user.kakaotalk_id as kakaotalkId,
+			user.last_updated_at as lastUpdatedAt,
+			user.last_login_at as lastLoginAt,
+			user.session_id as sessionId,
+			user.delete_yn as deleteYn,
+			user.created_at as createdAt
+		FROM `user`
+	</sql>
+
+	<!-- 본인인증, IAM 연동시 필요한 관련 정보 조회 -->
+	<sql id="selectUserInfo">
+		SELECT
+			user.user_id AS userId,
+			user.name AS name,
+			ecard.company_id AS companyId,
+			user.password AS password,
+			user.account_id AS accountId,
+			user.birthdate AS birthdate,
+			user.di AS di,
+			user.ci AS ci,
+			user.mobile_no AS mobileNo,
+			user.email AS email,
+			user.kakaotalk_id AS kakaotalkId,
+			ecard.ecard_id as ecardId,
+			ecard.fp_id as fpId
+		FROM user user
+		LEFT JOIN ecard ecard
+			ON ecard.user_id = user.user_id
+	</sql>
+
+	<select id="findUserByUserId" parameterType="String" resultType="UserBean">
+		<include refid="selectUserDefault" />
+		WHERE user.user_id = #{userId}
+	</select>
+
+	<select id="getUserInfoByFpId" parameterType="String" resultType="UserBean">
+		<include refid="selectUserInfo" />
+		WHERE fp_id = #{fpId}
+	</select>
+
+	<select id="getUserInfoByECardId" parameterType="String" resultType="UserBean">
+		<include refid="selectUserInfo" />
+		WHERE ecard_id = #{ecardId}
+	</select>
+
+	<select id="findDuplicationUserByUserId" parameterType="String" resultType="int">
+		SELECT COUNT(user_id) AS userCount
+		FROM `user`
+		WHERE user_id = #{userId}
+	</select>
+
+	<insert id="saveUser" parameterType="UserBean">
+		INSERT INTO `user`(
+		    user_id,
+		    password,
+		    name,
+	   		account_id,
+		    di,
+		    ci,
+		    mobile_no,
+		    birthdate,
+		    email,
+		    kakaotalk_id,
+		    delete_yn,
+			created_at
+		)
+		VALUES
+		(
+		    #{userId},
+		    UPPER(SHA1(UNHEX(SHA1(#{password})))),
+		    #{name},
+		    #{accountId},
+		    #{di},
+		 	#{ci},
+		    #{mobileNo},
+		    #{birthdate},
+		    #{email},
+		    #{kakaotalkId},
+			'N',
+		 	now()
+		)
+	</insert>
+	
+	<update id="updateUserByUserId" parameterType="UserBean">
+		UPDATE `user`
+		SET name = #{name}
+			, mobile_no = REPLACE(#{mobileNo}, '-', '')
+			, email = #{email}
+			, kakaotalk_id = #{kakaotalkId}
+			, last_updated_at = NOW() 
+		WHERE user_id = #{userId}
+	</update>
+
+	<select id="findUserMapByUserId" parameterType="String" resultType="hashmap">
+		SELECT
+			user.user_id AS userId,
+			ecard.ecard_id AS ecardId,
+			ecard.fp_id AS fpId,
+			user.name AS name,
+			user.mobile_no AS mobileNo,
+			ecard.fax_number AS faxNo,
+			ecard.email AS email,
+			kakaotalk_id AS kakaotalkId,
+			department,
+			file_path AS profileImgUrl,
+			file_name AS fileName,
+			ecard.profile_template_no AS profileTemplateNo
+		FROM `user` LEFT JOIN ecard
+			ON user.user_id = ecard.user_id
+		LEFT JOIN files C
+			ON ecard.profile_file_id = C.file_id
+		WHERE user.user_id = #{userId}
+	</select>
+	
+	<select id="findUserByEmail" parameterType="String" resultType="UserBean">
+		SELECT 
+			user_id,
+			name,
+			mobile_no,
+			email
+			kakaotalk_id
+		FROM `user`
+		WHERE email = #{email}
+		LIMIT 1
+	</select>
+
+	<select id="getUserExistence" parameterType="UserExistenceRequestDto" resultType="Map">
+		SELECT IF(COUNT(*) > 0, 'Y', 'N') as existenceYn,
+		       user.di as di,
+		       ecard.company_id as companyId,
+		       ecard.ecard_id as ecardId
+		FROM user user
+		 	JOIN ecard ecard ON ecard.user_id = user.user_id
+		WHERE 0 = 0
+		<if test="fpUniqNo != null and !''.equals(fpUniqNo)">
+			AND fp_id = #{fpUniqNo}
+		</if>
+	</select>
+
+	<update id="updateUserLastLoginAtByUserId" parameterType="String">
+		UPDATE user
+		SET last_login_at = NOW()
+		WHERE user_id = #{userId}
+	</update>
+
+	<select id="selectScrapingPayload" parameterType="String" resultType="CooconIdentificationPayloadDto">
+		SELECT
+			user.birthdate,
+			user.name,
+			user.mobile_no,
+			ecard.ecard_id
+		FROM user
+		JOIN ecard
+			ON user.user_id = ecard.user_id
+		WHERE user.user_id = #{userId}
+	</select>
+
+	<select id="findAccountId" parameterType="String" resultType="IamInfoDto">
+		SELECT
+		    account_id AS accountId
+		FROM
+		    user
+		WHERE user_id = #{userId}
+	</select>
+
+	<select id="findEcardUserInfo" parameterType="String" resultType="NFTCvUserDto">
+		SELECT
+		    user.user_id,
+			user.name,
+			user.mobile_no,
+			user.account_id,
+			ecard.company_id,
+			ecard.fp_id
+		FROM user
+		LEFT JOIN ecard
+		ON ecard.user_id = user.user_id
+		WHERE ecard.ecard_id = #{ecardId}
+	</select>
+
+	<update id="updateUserInfoByUserId" parameterType="UserBean">
+		UPDATE user
+		SET
+			account_id = #{accountId},
+			birthdate = #{birthdate},
+			ci = #{ci}
+		WHERE user_id = #{userId}
+	</update>
+</mapper>

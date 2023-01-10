@@ -1,0 +1,37 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: ${BUCKET_NAME}
+
+ecard:
+  services:
+    kakao:
+      app-id: 811653
+      rest-api-key: 4cff9f0b3c3fcd930cb7365d40114585
+      js-key: 959f251a404d8635f9cddfd501ca5f7c
+    iam:
+      x-iam-service-code: hanwha-fp-dev
+    ebap:
+      service-id: 7d9c7f1b-724e-43c3-a140-424919cef9fe
+    util:
+      url: dev.ecard.ent-bc.com
+    coocon:
+      publishing-key: 'Jo5h5gJKd2a8p3RA9L62DAhWNQCFpsEe'
+      url: devwc.coocon.co.kr/v1/
+      org-code: 'ebc'
+
+checkplus:
+  api:
+    server-url: 'https://svc.niceapi.co.kr:22001'
+  access-token: a174021e-75e9-46ff-bc75-18213fc0ea2e
+  product:
+    id: 2101979031
+  client:
+    id: 5ee89aa8-299a-457f-99d0-e4d085671dd1
+    secret: d53bf45121af12fac5bff706a4142d2f

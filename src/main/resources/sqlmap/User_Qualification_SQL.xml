@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.UserQualificationMapper">
+
+	<!-- QualificationBean 기본 조회 -->
+	<sql id="selectQualificationDefault">
+		SELECT
+			qualification_id as qualificationId,
+			user_id as  userId,
+			qualification_name as qualificationName,
+			qualification_number as qualificationNumber,
+			qualification_organization_name as qualificationOrganizationName,
+			final_qualified_date as finalQualifiedDate,
+			public_yn as publicYn
+		FROM user_qualification
+	</sql>
+	<insert id="createQualification" parameterType="UserQualificationBean">
+		INSERT INTO user_qualification(
+           qualification_id,
+           user_id,
+           qualification_name,
+           qualification_number,
+           qualification_organization_name,
+           final_qualified_date,
+			scraping_status,
+           public_yn
+        ) VALUES (
+            #{qualificationId},
+            #{userId},
+            #{qualificationName},
+            #{qualificationNumber},
+            #{qualificationOrganizationName},
+            #{finalQualifiedDate},
+			#{scrapingStatus},
+            #{publicYn}
+    	);
+	</insert>
+
+	<select id="findByUserId" parameterType="String" resultType="UserQualificationBean">
+		<include refid="selectQualificationDefault" />
+		WHERE user_id  = #{userId}
+        ORDER BY final_qualified_date
+	</select>
+	<select id="findUserQualificationBySpecification" parameterType="QualificationFilterDto" resultType="UserQualificationBean">
+		<include refid="selectQualificationDefault" />
+		WHERE 0 = 0
+		<if test="userId != null and userId != ''">
+		    AND user_id  = #{userId}
+        </if>
+		<if test="publicYn != null and publicYn != ''">
+		    AND public_yn  = #{publicYn}
+        </if>
+        ORDER BY final_qualified_date
+	</select>
+
+	<select id="getInsightByUserId" parameterType="String" resultType="QualificationInsight">
+		SELECT
+			insight.totalCount > 0 as existData,
+			insight.publicCount > 0 as existPublic,
+			insight.totalCount = insight.publicCount as allPublic
+		FROM (
+				 SELECT
+					 COUNT(*) as totalCount,
+					 (SELECT COUNT(*) FROM user_qualification WHERE user_id = (#{userId}) AND public_yn = 'Y') as publicCount
+				 FROM user_qualification
+				 WHERE user_id = #{userId}
+			 ) insight
+	</select>
+
+	<select id="findUserQualificationByQualificationId" parameterType="String" resultType="UserQualificationBean">
+		<include refid="selectQualificationDefault" />
+		WHERE qualification_id = #{qualificationId}
+        LIMIT 1
+	</select>
+
+	<update id="updateQualification" parameterType="UserQualificationBean">
+		UPDATE user_qualification
+        SET
+			public_yn = #{publicYn}
+		WHERE qualification_id = #{qualificationId}
+	</update>
+
+	<delete id="deleteQualification" parameterType="String">
+		DELETE FROM user_qualification
+		WHERE user_id = #{userId}
+	</delete>
+
+	<select id="getQnetScrapingStatus" parameterType="String" resultType="Map">
+		SELECT
+			IF(COUNT(*) > 0, '1', '2') as scrapingStatus
+		FROM
+			user_qualification
+		WHERE user_id = #{userId} AND scraping_status = '1'
+	</select>
+</mapper>

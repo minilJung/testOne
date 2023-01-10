@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.UserEducationMapper">
+    <insert id="createUserEducation" parameterType="UserEducationBean">
+        INSERT INTO user_education(
+            education_id,
+            user_id,
+            education_name,
+            education_organization_name,
+            start_date,
+            end_date,
+            public_yn,
+            <!--status, -->
+            created_at,
+            approved_at
+        )
+        VALUES(
+            #{educationId},
+            #{userId},
+            #{educationName},
+            #{educationOrganizationName},
+            #{startDate},
+            #{endDate},
+            #{publicYn},
+            <!--#{status}, -->
+            now(),
+            null
+          )
+    </insert>
+
+    <select id="getInsightByUserId" parameterType="String" resultType="ActivityInsight">
+        SELECT
+            insight.totalCount > 0 as existData,
+            insight.publicCount > 0 as existPublic,
+            insight.totalCount = insight.publicCount as allPublic
+        FROM (
+                 SELECT
+                     COUNT(*) as totalCount,
+                     (SELECT COUNT(*) FROM user_education WHERE user_id = (#{userId}) AND public_yn = 'Y') as publicCount
+                 FROM user_education
+                 WHERE user_id = #{userId}
+             ) insight
+    </select>
+
+    <select id="findUserEducationByEducationId" parameterType="String" resultType="UserEducationBean">
+        SELECT education_id as educationId,
+               user_id as userId,
+               education_name as educationName,
+               education_organization_name as educationOrganizationName,
+               start_date as startDate,
+               end_date as endDate,
+               public_yn as publicYn,
+               <!-- status as status, -->
+               created_at as createdAt
+        FROM user_education
+        WHERE education_id = #{educationId}
+        ORDER BY start_date
+                <!-- , status -->
+    </select>
+
+    <!--
+    <select id="findPendingEducationsByFpId" parameterType="String" resultType="UserEducationBean">
+        SELECT educaiton.education_id as educationId,
+               educaiton.user_id as userId,
+               educaiton.education_name as educationName,
+               educaiton.education_organization_name as educationOrganizationName,
+               educaiton.start_date as startDate,
+               educaiton.end_date as endDate,
+               educaiton.public_yn as publicYn,
+               educaiton.status as status,
+               educaiton.created_at as createdAt
+        FROM user_education educaiton
+            JOIN ecard
+                ON ecard.fp_id = #{fpId}
+                AND ecard.user_id = educaiton.user_id
+        WHERE educaiton.status = 'P'
+        ORDER BY start_date
+    </select> -->
+
+    <update id="updateUserEducation" parameterType="UserEducationBean">
+        UPDATE user_education
+        SET
+            public_yn = #{publicYn},
+            <!--status = #{status}, -->
+            approved_at = #{approvedAt}
+        WHERE education_id = #{educationId}
+    </update>
+
+    <delete id="deleteEducation" parameterType="ActivityDeleteRequestDto">
+        DELETE FROM user_education
+        WHERE education_id = #{id}
+
+    </delete>
+
+    <delete id="deleteEducationMedia" parameterType="ActivityDeleteRequestDto">
+        DELETE FROM user_education_media
+        WHERE education_id = #{id}
+    </delete>
+</mapper>

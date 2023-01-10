@@ -1,0 +1,73 @@
+spring:
+  profiles:
+    active: ${PROFILE}
+  mvc:
+    throw-exception-if-no-handler-found: true
+    view:
+      prefix: /WEB-INF/views/
+      suffix: .jsp
+  datasource:
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    url: jdbc:log4jdbc:mysql://${DB_ENDPOINT}/ecdb?useUnicode=true&characterEncoding=UTF-8
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  devtools:
+    livereload:
+      enabled: false
+    restart:
+      enabled: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+  web:
+    resources:
+      add-mappings: false
+mybatis:
+  type-aliases-package: com.ebc.ecard.domain.**, com.ebc.ecard.application.**.dto,
+  type-handlers-package: com.ebc.ecard.domain.**, com.ebc.ecard.application.**.dto
+  mapper-locations: sqlmap/*_SQL.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    jdbc-type-for-null: NULL
+logging:
+  pattern:
+    console: "[%d{HH:mm:ss}][%-5level][%logger.%method:line%line] - %msg%n"
+  level:
+    jdbc:
+      sqlonly: OFF
+      sqltiming: DEBUG
+      audit: OFF
+      resultset: OFF
+      resultsettable: DEBUG
+      connection: OFF
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: ${BUCKET_NAME}
+    stack:
+      auto: false
+ecard:
+  session:
+    variable: LOGIN_USER
+  cookie:
+    variable: AUTH_SESSION_ID
+  email:
+    from: no-reply@ent-bc.com
+  services:
+    kakao:
+      app-id:
+      rest-api-key:
+      js-key:
+    iam:
+      url: ${IAM_URL}
+    fep:
+      url: ${FEP_URL}
+    ebap:
+      url: ${EBAP_URL}
+    ecard:
+      url: ${SERVICE_URL}
+    coocon:
+      url:

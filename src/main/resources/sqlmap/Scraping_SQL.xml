@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ebc.ecard.mapper.ScrapingMapper">
+
+	<select id="findScrapingByScrapingId" parameterType="String" resultType="ScrapingBean">
+		SELECT
+			scraping_id,
+			ecard_id,
+			request_data,
+			callback_data,
+			response_message,
+			status,
+			created_at,
+			updated_at
+		FROM scraping
+		WHERE scraping_id = #{scrapingId}
+	</select>
+
+	<insert id="saveScrapingData" parameterType="ScrapingBean">
+		INSERT INTO scraping (
+			scraping_id,
+		    ecard_id,
+			scraping_type,
+			request_data,
+			status,
+			created_at
+		) VALUES (
+			#{scrapingId},
+			#{ecardId},
+			#{scrapingType},
+			#{requestData},
+			#{status},
+			now()
+		 )
+	</insert>
+
+	<update id="updateScrapingResult" parameterType="ScrapingUpdateDto">
+		UPDATE scraping
+		SET
+			callback_data = #{callbackData},
+			response_message = #{responseMessage},
+			status = #{status},
+			updated_at = now()
+		WHERE
+			scraping_id = #{scrapingId};
+	</update>
+</mapper>
